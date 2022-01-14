@@ -1,41 +1,36 @@
 import React, { useEffect, useState } from "react";
 import "react-tagsinput/react-tagsinput.css"; // If using WebPack and style-loader.
 import SearchTag from "./components/SearchTag";
+import inputMapper from "./inputMapper";
 
-const makeObj = (name, rule) => {
+const makeObj = (makerObj) => {
+  const { name, rule = "is", search = "" } = makerObj;
+
   const id = `${name}${Math.round(Math.random() * 100)}`;
-  console.log(id);
   const obj = {
     id,
     name,
     rule,
-    search: "",
+    search,
   };
-  return obj;
-};
 
-const makeQuery = (global, items) => {
-  return {
-    [global]: [
-      ...items.map((item) => ({ values: item.search, field: item.name })),
-    ],
-  };
+  return obj;
 };
 
 const App = () => {
   const [searchNr, setSearchNr] = useState([]);
-  const [changes, setChanges] = useState(0);
   const [match, setMatch] = useState("all");
 
-  const incrementSearch = (item) => {
-    const obj = makeObj(item, "is");
+  const incrementSearch = (makerObj) => {
+    const { name, rule } = makerObj;
+    const obj = makeObj({ name, rule });
+
     setSearchNr((old) => [...old, obj]);
   };
 
-  console.log(searchNr);
-
   return (
     <div className="h-screen px-4 py-6">
+      <pre>{JSON.stringify(searchNr, null, 2)}</pre>
       <div className="flex flex-col">
         <label className="w-full text-lg font-medium text-gray-700">
           Product Set Name
@@ -68,20 +63,25 @@ const App = () => {
           self={obj}
           searchNr={searchNr}
           setSearchNr={setSearchNr}
-          setChanges={setChanges}
         />
       ))}
       <div className="w-full">
         <select
           className="py-2 pl-3 pr-8 mt-5 text-xs font-bold text-gray-700 transition-all bg-gray-300 border border-gray-300 border-solid rounded-md focus:ring-primary focus:border-primary sm:text-base focus:text-gray-700 focus:bg-white focus:border-red-600 focus:outline-none"
           value=""
-          onChange={(e) => incrementSearch(e.target.value)}
+          onChange={(e) =>
+            incrementSearch({
+              name: e.target.value,
+              rule: inputMapper[e.target.value].rules[0],
+            })
+          }
         >
           <option defaultValue value="KrijoFilter">
             Krijo Filter
           </option>
           <option value="Gender">Gender</option>
           <option value="Brand">Brand</option>
+          <option value="Category">Category</option>
           <option value="Size All">Size All</option>
           <option value="Size In Stock">Size In Stock</option>
           <option value="Initial Price">Initial Price</option>
