@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import inputMapper from "../inputMapper";
 
 const SearchTag = (props) => {
@@ -26,32 +26,49 @@ const SearchTag = (props) => {
     );
   };
 
-  const CorrectInput = inputMapper[self.name].component;
-  const correctData = inputMapper[self.name]?.data;
-  const correctRules = inputMapper[self.name]?.rules;
+  const CorrectInput = useMemo(() => inputMapper[self.name].component, [self]);
+  const correctData = useMemo(() => inputMapper[self.name]?.data, [self]);
+  const correctRules = useMemo(() => inputMapper[self.name]?.rules, [self]);
+
+  useEffect(() => {
+    const theindex = searchNr.findIndex((obj) => obj.id === self.id);
+
+    setSearchNr((old) => [
+      ...old.slice(0, theindex),
+      {
+        ...old[theindex],
+        search: [],
+      },
+      ...old.slice(theindex + 1),
+    ]);
+  }, [self.rule]);
 
   return (
-    <div className="flex flex-row items-end mt-2 space-x-4">
-      <div className="flex flex-col max-w-full">
+    <div className="flex flex-row items-end mt-8">
+      <div className="flex flex-col mr-5">
         <h2 className="font-bold">{name}</h2>
-        <select
-          className="py-2 pl-3 pr-3 mt-1 text-xs text-gray-700 transition-all bg-gray-100 border border-gray-300 border-solid rounded-md cursor-pointer focus:ring-primary focus:border-primary sm:text-base focus:text-gray-700 focus:bg-white focus:border-red-600 focus:outline-none"
-          value={self.rule}
-          onChange={(e) => handleRuleChange(e.target.value)}
-        >
-          {correctRules.map((rule) => {
-            return <option key={rule}>{rule}</option>;
-          })}
-        </select>
+
+        {correctRules.length > 0 && (
+          <select
+            className="py-2 pl-3 pr-3 mt-2 text-xs text-gray-700 transition-all bg-gray-100 border border-gray-300 border-solid rounded-md cursor-pointer focus:ring-primary focus:border-primary sm:text-base focus:text-gray-700 focus:bg-white focus:border-red-600 focus:outline-none"
+            value={self.rule}
+            onChange={(e) => handleRuleChange(e.target.value)}
+          >
+            {correctRules.map((rule) => {
+              return <option key={rule}>{rule}</option>;
+            })}
+          </select>
+        )}
       </div>
 
       <div className="flex items-center justify-center flex-1">
-        <div className="flex flex-col justify-center w-full">
+        <div className="flex flex-col justify-center w-full mr-2">
           <CorrectInput
             self={self}
             setSearchNr={setSearchNr}
             searchNr={searchNr}
             data={correctData}
+            correctRules={correctRules}
           />
         </div>
 

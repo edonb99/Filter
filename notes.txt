@@ -1,0 +1,3 @@
+hasImage: boolean - radiobox
+gender: is / is not not searchable
+

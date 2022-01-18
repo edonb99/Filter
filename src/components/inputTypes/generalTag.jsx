@@ -46,7 +46,7 @@ const Generaltag = (props) => {
         data={data}
         placeholder="Select items"
         searchable
-        creatable
+        creatable={!["is", "is not"].includes(self.rule)}
         clearable
         getCreateLabel={(query) => `+ Create ${query}`}
         transitionDuration={150}

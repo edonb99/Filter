@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import "react-tagsinput/react-tagsinput.css"; // If using WebPack and style-loader.
+import React, { useState } from "react";
+import "react-tagsinput/react-tagsinput.css";
 import SearchTag from "./components/SearchTag";
 import inputMapper from "./inputMapper";
 
 const makeObj = (makerObj) => {
-  const { name, rule = "is", search = "" } = makerObj;
+  const { name, rule = "is", search = [] } = makerObj;
 
   const id = `${name}${Math.round(Math.random() * 100)}`;
   const obj = {
@@ -30,9 +30,12 @@ const App = () => {
 
   return (
     <div className="h-screen px-4 py-6">
-      <pre>{JSON.stringify(searchNr, null, 2)}</pre>
+      <pre>{JSON.stringify({ [match]: searchNr }, null, 2)}</pre>
       <div className="flex flex-col">
-        <label className="w-full text-lg font-medium text-gray-700">
+        <label className="w-full pb-3 mt-3 text-xl font-medium text-gray-700 border-b border-gray-300">
+          Create new product set
+        </label>
+        <label className="w-full mt-3 text-lg font-medium text-gray-700 ">
           Product Set Name
         </label>
         <input
@@ -54,6 +57,16 @@ const App = () => {
             <option value="or">at least one</option>
           </select>
           <span> of the following rules: </span>
+        </div>
+      </div>
+
+      <div className="mt-3 text-base ">
+        <div className="flex items-center justify-start space-x-2">
+          <p>Automatic updates</p>
+          <input
+            type="checkbox"
+            className="block mt-1 border-gray-300 rounded-md shadow-sm focus:ring-2 focus:border-2"
+          ></input>
         </div>
       </div>
 
@@ -90,6 +103,33 @@ const App = () => {
           <option value="On Sale">On Sale</option>
           <option value="Has Image">Has Image</option>
         </select>
+      </div>
+
+      <div className="flex flex-col mt-5">
+        <div className="text-lg font-bold ">Products</div>
+        <div className="flex flex-row w-full p-5 mt-3 overflow-x-scroll bg-gray-100">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"].map((item) => (
+            <div
+              key={item}
+              className="bg-white min-w-[10rem] mr-5 shadow-md border border-gray-200 rounded-lg"
+            >
+              <img
+                className="w-full"
+                src="https://nesha.digitalflow.systems/1/1/68139-gallery-1.jpg"
+                alt=""
+              />
+              <div className="p-2">
+                <p className="font-normal text-gray-700">Betsy</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-end m-3">
+        <button className="px-5 py-2 mb-3 text-green-100 transition-all duration-300 bg-green-500 rounded hover:bg-green-700 hover:text-green-50">
+          Krijo
+        </button>
       </div>
     </div>
   );

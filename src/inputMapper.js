@@ -1,5 +1,6 @@
 import Generaltag from "./components/inputTypes/generalTag";
 import PriceNumber from "./components/inputTypes/PriceNumber";
+import Radioinput from "./components/inputTypes/radioInput";
 
 const inputMapper = {
   Gender: {
@@ -115,19 +116,12 @@ const inputMapper = {
     rules: ["is", "is not", "between"],
   },
   "On Sale": {
-    component: Generaltag,
+    component: Radioinput,
     data: ["true", "false"],
-    rules: [
-      "is",
-      "is not",
-      "starts with",
-      "ends with",
-      "contains",
-      "does not contain",
-    ],
+    rules: [],
   },
   "Has Image": {
-    component: Generaltag,
+    component: Radioinput,
     data: ["true", "false"],
     rules: [],
   },
