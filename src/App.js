@@ -114,8 +114,12 @@ const App = () => {
     const totalFilter = { [match]: globalFilter };
     if (Object.values(totalFilter)[0]?.length === 0) return;
 
-    const parsedFilters = ParserService.parse(globalFilter);
+    const parsedFilters = ParserService.parse({
+      combination: match,
+      filters: globalFilter,
+    });
 
+    console.log(parsedFilters);
     let queryObj = {
       [match]: parsedFilters,
     };
