@@ -1,3 +1,9 @@
 hasImage: boolean - radiobox
 gender: is / is not not searchable
 
+rule - compare
+search - value 
+name - field
+
+searchNr - globalFilter
+SearchTag - filterField

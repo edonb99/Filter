@@ -3,56 +3,48 @@ import { MultiSelect } from "@mantine/core";
 
 const Generaltag = (props) => {
   const defaultData = ["yeah", "yoo", "idk"];
-  const {
-    data = defaultData,
-    searchNr,
-    setSearchNr,
-    externalOnCreate,
-    externalOnChange,
-    self,
-  } = props;
+  const { data = defaultData, globalFilter, setGlobalFilter, self } = props;
 
-  const defaultOnCreate = (query) => {
-    const theindex = searchNr.findIndex((obj) => obj.id === self.id);
-    setSearchNr((old) => [
+  const onChange = (input) => {
+    const theindex = globalFilter.findIndex((obj) => obj.id === self.id);
+
+    setGlobalFilter((old) => [
       ...old.slice(0, theindex),
       {
         ...old[theindex],
-        search: [...old[theindex].search, query],
+        values: input,
       },
       ...old.slice(theindex + 1),
     ]);
   };
 
-  const defaultOnChange = (values) => {
-    const theindex = searchNr.findIndex((obj) => obj.id === self.id);
-
-    setSearchNr((old) => [
-      ...old.slice(0, theindex),
-      {
-        ...old[theindex],
-        search: values,
-      },
-      ...old.slice(theindex + 1),
-    ]);
-  };
-
-  const onCreate = externalOnCreate ?? defaultOnCreate;
-  const onChange = externalOnChange ?? defaultOnChange;
+  if (["is", "is not"].includes(self.compare))
+    return (
+      <div>
+        <MultiSelect
+          data={data}
+          value={self.values}
+          searchable
+          creatable
+          getCreateLabel={() => ``}
+          clearable
+          onChange={onChange}
+        />
+      </div>
+    );
 
   return (
     <div>
       <MultiSelect
         data={data}
-        placeholder="Select items"
+        value={self.values}
         searchable
-        creatable={!["is", "is not"].includes(self.rule)}
+        creatable
         clearable
         getCreateLabel={(query) => `+ Create ${query}`}
         transitionDuration={150}
         transition="pop-top-left"
         transitionTimingFunction="ease"
-        onCreate={onCreate}
         onChange={onChange}
       />
     </div>

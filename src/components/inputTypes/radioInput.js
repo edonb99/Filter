@@ -2,16 +2,16 @@ import React from "react";
 import { RadioGroup, Radio } from "@mantine/core";
 
 const Radioinput = (props) => {
-  const { searchNr, setSearchNr, externalOnChange, self } = props;
+  const { globalFilter, setGlobalFilter, externalOnChange, self } = props;
 
   const defaultOnChange = (values) => {
-    const theindex = searchNr.findIndex((obj) => obj.id === self.id);
+    const theindex = globalFilter.findIndex((obj) => obj.id === self.id);
 
-    setSearchNr((old) => [
+    setGlobalFilter((old) => [
       ...old.slice(0, theindex),
       {
         ...old[theindex],
-        search: values,
+        values: [values],
       },
       ...old.slice(theindex + 1),
     ]);
