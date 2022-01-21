@@ -43,7 +43,7 @@ class ElasticAppSearch {
     "season",
   ];
 
-  static async query(obj, onlyInStock = true) {
+  static async query(obj) {
     const {
       query = "",
       search_fields = {},
@@ -77,11 +77,9 @@ class ElasticAppSearch {
       };
     }
 
-    const allFilters = filters;
-
     const searchOptions = {
       result_fields,
-      filters: allFilters,
+      filters: filters,
       page: {
         current: page,
         size: pageSize,
@@ -119,56 +117,6 @@ class ElasticAppSearch {
       currentPage: info.meta.page.current,
       maxPage: info.meta.page.total_pages,
     };
-  }
-
-  static async findBySku(sku) {
-    return ElasticAppSearch.findBy("skus", sku);
-  }
-
-  static async findById(id, cached = false) {
-    return ElasticAppSearch.findBy("id", id, cached);
-  }
-
-  static async findBy(field, value, cached = false) {
-    if (!Array.isArray(value)) {
-      value = [value];
-    }
-    let toBeReturned = value.filter((v) => v !== null).map((v) => v.toString());
-    let toBeFetched = cloneDeep(toBeReturned);
-
-    if (cached) {
-      if (ElasticAppSearch.cache.length > 30) {
-        ElasticAppSearch.cache = {};
-      }
-      const cachedIds = Object.keys(ElasticAppSearch.cache);
-      toBeFetched = toBeFetched.filter((id) => !cachedIds.includes(id));
-    }
-
-    let products = [];
-    if (toBeFetched.length > 0) {
-      const tempObj = {
-        query: "",
-        search_fields: {},
-
-        filters: {
-          [field]: toBeFetched,
-        },
-        page: 1,
-        pageSize: toBeFetched.length,
-        withFacets: [],
-      };
-
-      const res = await ElasticAppSearch.query(tempObj, false);
-      products = res.products;
-    }
-
-    if (cached) {
-      merge(ElasticAppSearch.cache, keyBy(products, "id"));
-      return Object.values(ElasticAppSearch.cache).filter((p) =>
-        toBeReturned.includes(p.id)
-      );
-    }
-    return products;
   }
 
   static init() {
@@ -216,60 +164,6 @@ class ElasticAppSearch {
     return result;
   }
 
-  static async getMulti(related_group, recommended_products) {
-    const result_fields = {};
-    ElasticAppSearch.resultFields.forEach((field) => {
-      result_fields[field] = {
-        raw: {},
-      };
-    });
-
-    let relatedFilters = {
-      all: [{ in_stock: "1" }],
-    };
-
-    if (related_group) {
-      relatedFilters = {
-        all: [{ related_group }, { in_stock: "1" }],
-      };
-    }
-
-    const resp = await ElasticAppSearch.client
-      .multiSearch([
-        {
-          query: "",
-          options: {
-            result_fields,
-            filters: relatedFilters,
-            page: {
-              size: related_group != null && related_group != 0 ? 5 : 0,
-            },
-          },
-        },
-        {
-          query: "",
-          options: {
-            result_fields,
-            filters: {
-              all: [{ id: recommended_products }, { in_stock: "1" }],
-            },
-            page: {
-              size: recommended_products.length,
-            },
-          },
-        },
-      ])
-      .catch((err) => {
-        console.log("ElasticAppSearch Error", err.message);
-        return err;
-      });
-    return resp.map((result_set) =>
-      result_set.results.map((single_result) =>
-        ElasticAppSearch.flattenProduct(single_result)
-      )
-    );
-  }
-
   static flattenProduct(r) {
     let result = {};
 
@@ -285,37 +179,6 @@ class ElasticAppSearch {
     result.rendered_initial_price = renderNumber(result.initial_price) + " €";
     result.rendered_price = renderNumber(result.price) + " €";
     return result;
-  }
-
-  static async executeFilter(state) {
-    const combination = Object.keys(state)[0];
-    let queryObj = {
-      filters: {
-        [combination]: [],
-      },
-      page: {
-        size: 5,
-      },
-    };
-    const needed = Object.values(state)[0];
-    needed.map(
-      (filter) =>
-        (queryObj.filters[combination] = { [filter.es]: filter.values })
-    );
-
-    return await ElasticAppSearch.client.search("", queryObj);
-  }
-
-  static async getFields(state) {
-    let queryObj = {
-      facets: {},
-    };
-    const needed = Object.values(state)[0];
-    needed.map(
-      (filter) => (queryObj.facets[filter.es] = { type: "value", size: 100 })
-    );
-
-    return await ElasticAppSearch.client.search("", queryObj);
   }
 }
 

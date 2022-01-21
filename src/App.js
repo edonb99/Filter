@@ -111,31 +111,27 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const totalFilter = { [match]: globalFilter };
-    if (Object.values(totalFilter)[0]?.length === 0) return;
+    if (globalFilter.length === 0) return;
 
     const parsedFilters = ParserService.parse({
       combination: match,
       filters: globalFilter,
     });
 
-    console.log(parsedFilters);
-    let queryObj = {
-      [match]: parsedFilters,
-    };
+    console.log(Math.random());
 
     async function runAwait() {
       const [result, error] = await handleProm(
-        ElasticAppSearch.query({ filters: queryObj, size: 20 })
+        ElasticAppSearch.query({ filters: parsedFilters, size: 20 })
       );
 
-      if (error) {
-        console.log(error);
-        return;
-      }
+      // if (error) {
+      //   console.log(error);
+      //   return;
+      // }
 
+      console.log(parsedFilters);
       setFacets(result.facets);
-      console.log(result.products);
       setProducts(result.products);
     }
 
