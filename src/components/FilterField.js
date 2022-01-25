@@ -26,12 +26,6 @@ const FilterField = (props) => {
     );
   };
 
-  const CorrectInput = componentMapper[self.name];
-  const correctRules = rulesMapper[self.type];
-  const correctData = facets[self.es]
-    ? facets[self.es][0].data.map((dt) => dt.value)
-    : [];
-
   return (
     <div className="flex flex-row items-end mt-8">
       <div className="flex flex-col mr-5">

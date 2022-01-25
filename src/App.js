@@ -151,6 +151,14 @@ const App = () => {
 
       <Header match={match} setMatch={setMatch} />
 
+
+      {globalFilter.map(filter) => {
+
+        return (
+          
+        )
+      }}
+
       {globalFilter.map((obj) => (
         <FilterField
           key={obj.id}

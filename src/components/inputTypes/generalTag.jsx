@@ -3,19 +3,16 @@ import { MultiSelect } from "@mantine/core";
 
 const Generaltag = (props) => {
   const defaultData = ["yeah", "yoo", "idk"];
-  const { data = defaultData, globalFilter, setGlobalFilter, self } = props;
+  const {
+    data = defaultData,
+    globalFilter,
+    setGlobalFilter,
+    self,
+    callback,
+  } = props;
 
   const onChange = (input) => {
-    const theindex = globalFilter.findIndex((obj) => obj.id === self.id);
-
-    setGlobalFilter((old) => [
-      ...old.slice(0, theindex),
-      {
-        ...old[theindex],
-        values: input,
-      },
-      ...old.slice(theindex + 1),
-    ]);
+    return callback(input);
   };
 
   if (["is", "is not"].includes(self.compare))
