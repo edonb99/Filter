@@ -37,7 +37,7 @@ const App = () => {
 
   useEffect(() => {
     async function runFirst() {
-      //const [result, error] = await handleProm(IntegrohuClient.getFilters());
+      // const [result, error] = await handleProm(IntegrohuClient.getFilters());
 
       // if (error) {
       //   console.log(error);
@@ -122,15 +122,15 @@ const App = () => {
 
     async function runAwait() {
       const [result, error] = await handleProm(
-        ElasticAppSearch.query({ filters: parsedFilters, size: 20 })
+        ElasticAppSearch.query({ filters: parsedFilters, pageSize: 20 })
       );
 
-      // if (error) {
-      //   console.log(error);
-      //   return;
-      // }
+      if (error) {
+        console.log(error);
+        //return;
+      }
 
-      console.log(parsedFilters);
+      console.log(JSON.stringify(parsedFilters, "", 4));
       setFacets(result.facets);
       setProducts(result.products);
     }
@@ -193,6 +193,7 @@ const App = () => {
               />
               <div className="p-2 border-t border-gray-200">
                 <p className="font-normal text-gray-700">{item.name}</p>
+                <p className="mt-1 text-gray-700">{item.price}</p>
               </div>
             </div>
           ))}

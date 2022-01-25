@@ -1,9 +1,11 @@
 class ParserService {
+  static whiteList = [""];
+
   static parse(filterConfig) {
-    const { combination, filters } = filterConfig;
+    const { combination: bucket, filters } = filterConfig;
 
     const finalQuery = {
-      [combination]: [{}],
+      [bucket]: [],
     };
 
     const transform = {
@@ -13,22 +15,29 @@ class ParserService {
 
       compare: {
         "is not": (filter) => ParserService.schemaIsNot(filter),
+        between: (filter) => {
+          const [min = 0, max = 1000] = filter.values;
+          filter.values = {
+            from: min,
+            to: max,
+          };
+          return filter;
+        },
       },
     };
 
     filters.forEach((filter) => {
-      const transformed = ParserService.applyTransform(transform, filter);
-      const bucket = transformed.bucket ?? "all";
+      ParserService.applyTransform(transform, filter);
+    });
 
-      transformed.bucket && delete transformed.bucket;
+    debugger;
 
-      finalQuery[combination][0] = {
-        ...finalQuery[combination][0],
-        [bucket]: {
-          ...finalQuery[combination][0][bucket],
-          ...transformed.transformed,
-        },
-      };
+    filters.forEach((filter) => {
+      let esFilter = { [filter.es]: filter.values };
+      if (filter.innerBucket) {
+        esFilter = { [filter.innerBucket]: [esFilter] };
+      }
+      finalQuery[bucket].push(esFilter);
     });
 
     return finalQuery;
@@ -38,8 +47,8 @@ class ParserService {
     return { [key]: value };
   }
 
-  static parseNumeric(values) {
-    return values.map((val) => parseFloat(val));
+  static parseNumeric(filter) {
+    return filter.values.map((val) => parseFloat(val));
   }
 
   static schemaBetween(values) {
@@ -50,25 +59,28 @@ class ParserService {
   }
 
   static schemaIsNot(filter) {
-    const transformed = ParserService.getEs(filter.es, filter.values);
-    return { transformed: transformed, bucket: "none" };
+    filter["compare"] = "is";
+    filter["innerBucket"] = "none";
+    return filter;
   }
 
   // execution
   static applyTransform(transform, filter) {
     let finalForm;
 
-    Object.entries(transform).forEach(([tsKey, transform]) => {
-      const execution =
-        transform[filter[tsKey]] ?? ParserService.defaultTransform;
-      finalForm = execution(filter);
+    Object.entries(transform).forEach(([transformation_key, transform]) => {
+      (
+        transform[filter[transformation_key]] ??
+        transform["default"] ??
+        ((filter) => filter)
+      )(filter);
     });
 
     return finalForm;
   }
 
   static defaultTransform(filter) {
-    return { transformed: ParserService.getEs(filter.es, filter.values) };
+    return ParserService.getEs(filter.es, filter.values);
   }
 }
 
