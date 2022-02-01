@@ -1,3 +1,5 @@
+import { cloneDeep } from "lodash";
+
 class ParserService {
   static whiteList = [""];
 
@@ -15,24 +17,20 @@ class ParserService {
 
       compare: {
         "is not": (filter) => ParserService.schemaIsNot(filter),
-        between: (filter) => {
-          const [min = 0, max = 1000] = filter.values;
-          filter.values = {
-            from: min,
-            to: max,
-          };
-          return filter;
-        },
+        between: (filter) => ParserService.schemaBetween(filter),
+        "does not contain": (filter) =>
+          ParserService.schemaDoesNotContain(filter),
       },
     };
 
-    filters.forEach((filter) => {
+    const cloned = cloneDeep(filters);
+
+    cloned.forEach((filter) => {
       ParserService.applyTransform(transform, filter);
     });
 
-    debugger;
-
-    filters.forEach((filter) => {
+    cloned.forEach((filter) => {
+      if (filter.values.length < 1) return;
       let esFilter = { [filter.es]: filter.values };
       if (filter.innerBucket) {
         esFilter = { [filter.innerBucket]: [esFilter] };
@@ -51,15 +49,18 @@ class ParserService {
     return filter.values.map((val) => parseFloat(val));
   }
 
-  static schemaBetween(values) {
-    return {
-      from: values[0],
-      to: values[1],
-    };
+  static schemaBetween(filter) {
+    const [min = 0, max = 1000] = filter.values;
+    filter.values = { from: min, to: max };
+    return filter;
   }
 
   static schemaIsNot(filter) {
-    filter["compare"] = "is";
+    filter["innerBucket"] = "none";
+    return filter;
+  }
+
+  static schemaDoesNotContain(filter) {
     filter["innerBucket"] = "none";
     return filter;
   }

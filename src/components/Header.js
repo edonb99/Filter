@@ -28,7 +28,7 @@ const Header = (props) => {
             onChange={(e) => setMatch(e.target.value)}
           >
             <option value="all">all</option>
-            <option value="or">at least one</option>
+            <option value="any">at least one</option>
           </select>
           <span> of the following rules: </span>
         </div>

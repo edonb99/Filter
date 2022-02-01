@@ -1,16 +1,8 @@
-const rulesMapper = {
-  standard: [
-    "is",
-    "is not",
-    "starts with",
-    "ends with",
-    "contains",
-    "does not contain",
-  ],
-  array: ["contains", "does not contain"],
-  numeric: ["is", "is not", "between"],
-  images: [],
-  boolean: [],
+const RULE_MAPPER = {
+  standard: ["is", "is not", "starts with", "ends with"],
+  multi: ["contains", "does not contain"],
+  checker: ["is", "is not", "between"],
+  none: [],
 };
 
-export default rulesMapper;
+export default RULE_MAPPER;

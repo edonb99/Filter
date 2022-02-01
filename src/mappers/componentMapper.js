@@ -1,22 +1,22 @@
-import Generaltag from "../components/inputTypes/generalTag";
-import PriceNumber from "../components/inputTypes/PriceNumber";
-import Radioinput from "../components/inputTypes/radioInput";
+import CreatableMultiSelect from "../components/inputs/CreatableMultiSelect";
+import BetweenNumberInput from "../components/inputs/BetweenNumberInput";
+import RadioInput from "../components/inputs/RadioInput";
+import NumberInput from "../components/inputs/NumberInput";
+import MultiSelection from "../components/inputs/MultiSelection";
 
-const componentMapper = {
+const COMPONENT_MAPPER = {
   string: {
-    default: Generaltag,
-    is: "",
-    "is not": "",
+    default: CreatableMultiSelect,
+    is: MultiSelection,
+    "is not": MultiSelection,
   },
-  number: Generaltag,
-  boolean: Generaltag,
-  "Size All": Generaltag,
-  "Size In Stock": Generaltag,
-  Price: PriceNumber,
-  "Initial Price": PriceNumber,
-  "Total Stock": PriceNumber,
-  "On Sale": Radioinput,
-  "Has Images": Radioinput,
+  numeric: {
+    default: NumberInput,
+    between: BetweenNumberInput,
+  },
+  boolean: {
+    default: RadioInput,
+  },
 };
 
-export default componentMapper;
+export default COMPONENT_MAPPER;

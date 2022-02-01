@@ -1,17 +1,16 @@
-import React, { useRef, useState } from "react";
-import { useEffect } from "react/cjs/react.development";
-import FilterField from "./components/FilterField";
+import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import { handleProm } from "./helpers/promises";
-import rulesMapper from "./mappers/rulesMapper";
 import ElasticAppSearch from "./Services/ElasticAppSearch";
 import ParserService from "./Services/ParserService";
+import COMPONENT_MAPPER from "./mappers/componentMapper";
+import RULE_MAPPER from "./mappers/rulesMapper";
+import { getFacet } from "./helpers/utils";
 
 const App = () => {
   ElasticAppSearch.init();
 
   const [isLoading, setIsLoading] = useState(true);
-  const recentlyCreated = useRef(false);
   const [globalFilter, setGlobalFilter] = useState([]);
   const [filters, setFilters] = useState([]);
   const [match, setMatch] = useState("all");
@@ -22,13 +21,15 @@ const App = () => {
   const incrementSearch = (event) => {
     const key = event.target.value;
     const fullObj = filters.filter((flt) => flt.key === key)[0];
+
     const constructedObj = {
       id: `${fullObj.name}-${Math.round(Math.random() * 1000)}`,
       es: fullObj.es_field,
       field: fullObj.key,
       name: fullObj.name,
       values: [],
-      compare: rulesMapper[fullObj.type][0],
+      compare: RULE_MAPPER[fullObj.compareFields][0],
+      fieldMap: fullObj.compareFields,
       type: fullObj.type,
     };
 
@@ -47,62 +48,65 @@ const App = () => {
         {
           key: "product.gender",
           name: "Gender",
-          type: "standard",
+          type: "string",
+          compareFields: "standard",
           es_field: "gender",
         },
         {
           key: "product.brand",
           name: "Brand",
-          type: "standard",
+          type: "string",
+          compareFields: "standard",
           es_field: "brand",
         },
         {
           key: "product.category",
           name: "Category",
-          type: "standard",
+          type: "string",
+          compareFields: "standard",
           es_field: "category",
         },
         {
           key: "compiled_attributes.size_all[]",
           name: "Size All",
-          type: "array",
+          type: "string",
+          compareFields: "multi",
           es_field: "variants_all",
         },
         {
           key: "compiled_attributes.size_instock[]",
           name: "Size Instock",
-          type: "array",
+          type: "string",
+          compareFields: "multi",
           es_field: "variants_in_stock",
         },
         {
           key: "numeric:compiled_attributes.initial_price",
           name: "Initial Price",
           type: "numeric",
+          compareFields: "checker",
           es_field: "initial_price",
         },
         {
           key: "numeric:compiled_attributes.price",
           name: "Price",
           type: "numeric",
+          compareFields: "checker",
           es_field: "price",
         },
         {
           key: "numeric:compiled_attributes.total_stock",
           name: "Total Stock",
           type: "numeric",
+          compareFields: "checker",
           es_field: "total_stock",
         },
         {
           key: "boolean:compiled_attributes.on_sale",
           name: "On Sale",
           type: "boolean",
+          compareFields: "none",
           es_field: "on_sale",
-        },
-        {
-          key: "images:images.has_images",
-          name: "Has Images",
-          type: "images",
-          es_field: "images",
         },
       ]);
       setIsLoading(false);
@@ -118,7 +122,7 @@ const App = () => {
       filters: globalFilter,
     });
 
-    console.log(Math.random());
+    console.log(parsedFilters);
 
     async function runAwait() {
       const [result, error] = await handleProm(
@@ -127,10 +131,9 @@ const App = () => {
 
       if (error) {
         console.log(error);
-        //return;
+        return;
       }
 
-      console.log(JSON.stringify(parsedFilters, "", 4));
       setFacets(result.facets);
       setProducts(result.products);
     }
@@ -145,29 +148,98 @@ const App = () => {
       </div>
     );
 
+  const handleRuleChange = (information) => {
+    const { value, index } = information;
+
+    setGlobalFilter((old) => [
+      ...old.slice(0, index),
+      {
+        ...old[index],
+        compare: value,
+        values: [],
+      },
+      ...old.slice(index + 1),
+    ]);
+  };
+
+  const handleFilterChange = (value, index) => {
+    setGlobalFilter((old) => [
+      ...old.slice(0, index),
+      {
+        ...old[index],
+        values: value,
+      },
+      ...old.slice(index + 1),
+    ]);
+  };
+
+  const removeField = (index) => {
+    setGlobalFilter(globalFilter.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="h-screen px-4 py-6">
       <pre>{JSON.stringify({ [match]: globalFilter }, null, 2)}</pre>
 
       <Header match={match} setMatch={setMatch} />
 
-
-      {globalFilter.map(filter) => {
+      {globalFilter.map((filter, index) => {
+        const type = filter.type;
+        const compare =
+          filter.compare in COMPONENT_MAPPER[type] ? filter.compare : "default";
+        const CorrectInput = COMPONENT_MAPPER[type][compare];
+        const rules = RULE_MAPPER[filter.fieldMap];
 
         return (
-          
-        )
-      }}
+          <div key={filter.id} className="flex flex-row items-end mt-8">
+            <div className="flex flex-col mr-5">
+              <h2 className="font-bold">{filter.name}</h2>
 
-      {globalFilter.map((obj) => (
-        <FilterField
-          key={obj.id}
-          self={obj}
-          globalFilter={globalFilter}
-          setGlobalFilter={setGlobalFilter}
-          facets={facets}
-        />
-      ))}
+              {rules.length > 0 && (
+                <select
+                  className="py-2 pl-3 pr-3 mt-2 text-xs text-gray-700 transition-all bg-gray-100 border border-gray-300 border-solid rounded-md cursor-pointer focus:ring-primary focus:border-primary sm:text-base focus:text-gray-700 focus:bg-white focus:border-red-600 focus:outline-none"
+                  value={filter.compare}
+                  onChange={(e) =>
+                    handleRuleChange({ value: e.target.value, index })
+                  }
+                >
+                  {rules.map((compare) => {
+                    return <option key={compare}>{compare}</option>;
+                  })}
+                </select>
+              )}
+            </div>
+
+            <div className="flex items-center justify-center flex-1">
+              <div className="flex flex-col justify-center w-full mr-2">
+                <CorrectInput
+                  data={getFacet(facets, filter.es)}
+                  value={filter.values}
+                  callback={(value) => {
+                    handleFilterChange(value, index);
+                  }}
+                />
+              </div>
+
+              <svg
+                onClick={() => removeField(index)}
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6 cursor-pointer"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="red"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </div>
+          </div>
+        );
+      })}
 
       <div className="w-full">
         <select
@@ -195,13 +267,13 @@ const App = () => {
               className="flex-shrink-0 mr-5 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-md w-52"
             >
               <img
-                className="w-full aspect-square"
+                className="object-cover w-full aspect-square"
                 src={item.image_sm}
                 alt=""
               />
               <div className="p-2 border-t border-gray-200">
                 <p className="font-normal text-gray-700">{item.name}</p>
-                <p className="mt-1 text-gray-700">{item.price}</p>
+                <p className="text-gray-700 ">{item.price}€</p>
               </div>
             </div>
           ))}
